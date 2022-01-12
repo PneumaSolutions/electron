@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Campbell <mattcampbell@pobox.com>
+Date: Wed, 12 Jan 2022 06:17:43 -0600
+Subject: fix: Allow WebRTC audio processing for screen capture devices.
+
+Some applications need this so they can enable echo cancellation on
+captured audio output.
+
+diff --git a/third_party/blink/renderer/modules/mediastream/user_media_processor.cc b/third_party/blink/renderer/modules/mediastream/user_media_processor.cc
+index 4408178e215016a63304d44de3645c4d41acfecc..7eac6758033ad20a5a759763c4fd8911f5bd317c 100644
+--- a/third_party/blink/renderer/modules/mediastream/user_media_processor.cc
++++ b/third_party/blink/renderer/modules/mediastream/user_media_processor.cc
+@@ -1412,14 +1412,12 @@ UserMediaProcessor::CreateAudioSource(
+   DCHECK(current_request_info_);
+ 
+   StreamControls* stream_controls = current_request_info_->stream_controls();
+-  // If the audio device is a loopback device (for screen capture), or if the
+-  // constraints/effects parameters indicate no audio processing is needed,
++  // If the constraints/effects parameters indicate no audio processing is needed,
+   // create an efficient, direct-path MediaStreamAudioSource instance.
+   blink::AudioProcessingProperties audio_processing_properties =
+       current_request_info_->audio_capture_settings()
+           .audio_processing_properties();
+-  if (blink::IsScreenCaptureMediaType(device.type) ||
+-      !blink::MediaStreamAudioProcessor::WouldModifyAudio(
++  if (!blink::MediaStreamAudioProcessor::WouldModifyAudio(
+           audio_processing_properties)) {
+     SendLogMessage(
+         base::StringPrintf("%s => (no audiprocessing is used)", __func__));
+@@ -1431,8 +1429,7 @@ UserMediaProcessor::CreateAudioSource(
+         task_runner_);
+   }
+ 
+-  // The audio device is not associated with screen capture and also requires
+-  // processing.
++  // The audio source requires processing.
+   SendLogMessage(
+       base::StringPrintf("%s => (audiprocessing is required)", __func__));
+   return std::make_unique<blink::ProcessedLocalAudioSource>(
