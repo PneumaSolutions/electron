@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Campbell <mattcampbell@pobox.com>
+Date: Mon, 27 Mar 2023 15:55:22 -0500
+Subject: fix: Allow desktop capture to switch desktops on Windows
+
+Otherwise we can't use Chromium's desktop capture in RIM.
+
+diff --git a/content/browser/media/capture/desktop_capture_device.cc b/content/browser/media/capture/desktop_capture_device.cc
+index a30e05a9aac9c6d14430be92ee2824d423e7e26d..2b3831c50d290289fa345db26bd1d36ba22acf9e 100644
+--- a/content/browser/media/capture/desktop_capture_device.cc
++++ b/content/browser/media/capture/desktop_capture_device.cc
+@@ -618,8 +618,8 @@ DesktopCaptureDevice::DesktopCaptureDevice(
+     std::unique_ptr<webrtc::DesktopCapturer> capturer,
+     DesktopMediaID::Type type)
+     : thread_("desktopCaptureThread") {
+-#if defined(OS_WIN) || defined(OS_MAC)
+-  // On Windows/OSX the thread must be a UI thread.
++#if defined(OS_MAC)
++  // On OSX the thread must be a UI thread.
+   base::MessagePumpType thread_type = base::MessagePumpType::UI;
+ #else
+   base::MessagePumpType thread_type = base::MessagePumpType::DEFAULT;
