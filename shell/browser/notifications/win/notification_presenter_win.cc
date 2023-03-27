@@ -29,10 +29,6 @@ namespace electron {
 
 namespace {
 
-bool IsDebuggingNotifications() {
-  return base::Environment::Create()->HasVar("ELECTRON_DEBUG_NOTIFICATIONS");
-}
-
 bool SaveIconToPath(const SkBitmap& bitmap, const base::FilePath& path) {
   std::vector<unsigned char> png_data;
   if (!gfx::PNGCodec::EncodeBGRASkBitmap(bitmap, false, &png_data))
@@ -47,19 +43,7 @@ bool SaveIconToPath(const SkBitmap& bitmap, const base::FilePath& path) {
 
 // static
 NotificationPresenter* NotificationPresenter::Create() {
-  auto version = base::win::GetVersion();
-  if (version < base::win::Version::WIN8)
-    return new NotificationPresenterWin7;
-  if (!WindowsToastNotification::Initialize())
-    return nullptr;
-  auto presenter = std::make_unique<NotificationPresenterWin>();
-  if (!presenter->Init())
-    return nullptr;
-
-  if (IsDebuggingNotifications())
-    LOG(INFO) << "Successfully created Windows notifications presenter";
-
-  return presenter.release();
+  return new NotificationPresenterWin7;
 }
 
 NotificationPresenterWin::NotificationPresenterWin() = default;
