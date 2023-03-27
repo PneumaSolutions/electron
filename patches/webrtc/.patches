@@ -1,4 +1,2 @@
 fix_fallback_to_x11_capturer_on_wayland.patch
-cherry-pick-e0efbd45ea74.patch
-cherry-pick-218b56e51638.patch
 opus_stereo.patch
