@@ -139,3 +139,4 @@ cherry-pick-26bfa5807606.patch
 revert_do_not_display_grammar_error_if_there_it_overlaps_with_spell.patch
 allow_webrtc_audio_processing_on_screen_capture.patch
 desktop_capture_win_switch_desktop.patch
+webrtc_old_constraints_channel_count.patch
