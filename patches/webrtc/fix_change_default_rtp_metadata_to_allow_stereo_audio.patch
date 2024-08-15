@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Campbell <mattcampbell@pobox.com>
+Date: Thu, 15 Aug 2024 08:20:35 -0500
+Subject: fix: Change default RTP metadata to allow stereo audio
+
+Necessary for stereo audio in RIM.
+
+diff --git a/api/audio_codecs/opus/audio_decoder_opus.cc b/api/audio_codecs/opus/audio_decoder_opus.cc
+index efc9a73546efe75d00d1d0f0ead2969135406eb5..dc09b09fae3898579fd8197844d2437d0e2d8b25 100644
+--- a/api/audio_codecs/opus/audio_decoder_opus.cc
++++ b/api/audio_codecs/opus/audio_decoder_opus.cc
+@@ -67,7 +67,7 @@ void AudioDecoderOpus::AppendSupportedDecoders(
+   opus_info.allow_comfort_noise = false;
+   opus_info.supports_network_adaption = true;
+   SdpAudioFormat opus_format(
+-      {"opus", 48000, 2, {{"minptime", "10"}, {"useinbandfec", "1"}}});
++      {"opus", 48000, 2, {{"minptime", "10"}, {"useinbandfec", "1"}, {"stereo", "1"}}});
+   specs->push_back({std::move(opus_format), opus_info});
+ }
+ 
+diff --git a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
+index 51b0fcd492599ed088f1017bf16e9524653ef389..e106e048007ceb0e3525cd1e72e2a4ddf56fa0ee 100644
+--- a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
++++ b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
+@@ -210,7 +210,7 @@ void AudioEncoderOpusImpl::AppendSupportedEncoders(
+   const SdpAudioFormat fmt = {"opus",
+                               kRtpTimestampRateHz,
+                               2,
+-                              {{"minptime", "10"}, {"useinbandfec", "1"}}};
++                              {{"minptime", "10"}, {"useinbandfec", "1"}, {"stereo", "1"}}};
+   const AudioCodecInfo info = QueryAudioEncoder(*SdpToConfig(fmt));
+   specs->push_back({fmt, info});
+ }
