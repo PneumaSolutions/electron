@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Campbell <mattcampbell@pobox.com>
+Date: Thu, 15 Aug 2024 08:14:38 -0500
+Subject: fix: Allow old-style media constraints to specify channel count
+
+Necessary for stereo audio capture in RIM.
+
+diff --git a/third_party/blink/renderer/modules/mediastream/media_constraints_impl.cc b/third_party/blink/renderer/modules/mediastream/media_constraints_impl.cc
+index 35888168b688b7582d534714bab79d64940e04cf..2938ee024b79548272149aab51624078e80d416a 100644
+--- a/third_party/blink/renderer/modules/mediastream/media_constraints_impl.cc
++++ b/third_party/blink/renderer/modules/mediastream/media_constraints_impl.cc
+@@ -89,6 +89,7 @@ const char kMaxHeight[] = "maxHeight";
+ const char kMinHeight[] = "minHeight";
+ const char kMaxFrameRate[] = "maxFrameRate";
+ const char kMinFrameRate[] = "minFrameRate";
++const char kChannelCount[] = "channelCount";
+ const char kMediaStreamSource[] = "chromeMediaSource";
+ const char kMediaStreamSourceId[] =
+     "chromeMediaSourceId";                           // mapped to deviceId
+@@ -195,6 +196,8 @@ static void ParseOldStyleNames(
+       result.frame_rate.SetMin(atof(constraint.value_.Utf8().c_str()));
+     } else if (constraint.name_ == kMaxFrameRate) {
+       result.frame_rate.SetMax(atof(constraint.value_.Utf8().c_str()));
++    } else if (constraint.name_ == kChannelCount) {
++      result.channel_count.SetExact(atoi(constraint.value_.Utf8().c_str()));
+     } else if (constraint.name_ == kEchoCancellation) {
+       result.echo_cancellation.SetExact(ToBoolean(constraint.value_));
+     } else if (constraint.name_ == kMediaStreamSource) {
