@@ -1,0 +1,60 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Campbell <mattcampbell@pobox.com>
+Date: Fri, 16 Aug 2024 12:57:30 -0500
+Subject: fix: Don't add the mouse cursor to desktop capture
+
+Hard-coding what RIM needs.
+
+diff --git a/content/browser/media/capture/desktop_capture_device.cc b/content/browser/media/capture/desktop_capture_device.cc
+index 55371c5a648de0b27cad11926dea711b0315f3f3..e62d58cf80df295e9be9f99903adb1d739821860 100644
+--- a/content/browser/media/capture/desktop_capture_device.cc
++++ b/content/browser/media/capture/desktop_capture_device.cc
+@@ -47,7 +47,6 @@
+ #include "third_party/libyuv/include/libyuv/scale_argb.h"
+ #include "third_party/webrtc/modules/desktop_capture/cropped_desktop_frame.h"
+ #include "third_party/webrtc/modules/desktop_capture/cropping_window_capturer.h"
+-#include "third_party/webrtc/modules/desktop_capture/desktop_and_cursor_composer.h"
+ #include "third_party/webrtc/modules/desktop_capture/desktop_capture_options.h"
+ #include "third_party/webrtc/modules/desktop_capture/desktop_capture_types.h"
+ #include "third_party/webrtc/modules/desktop_capture/desktop_capturer.h"
+@@ -761,20 +760,6 @@ std::unique_ptr<media::VideoCaptureDevice> DesktopCaptureDevice::Create(
+ #if BUILDFLAG(IS_WIN)
+   options.set_allow_cropping_window_capturer(true);
+ 
+-  // We prefer to allow the WGC and DXGI capturers to embed the cursor when
+-  // possible. The DXGI implementation uses this switch in combination with
+-  // internal checks for support of if it is possible to embed the cursor.
+-  // Note that, very few graphical adapters support embedding the cursor into
+-  // the captured frame in combination with DXGI; hence most cursors will be
+-  // added separately by a desktop and cursor composer even if this option is
+-  // set to true. GDI does not use this option.
+-  // TODO(crbug.com/40259358): Possibly remove this flag. Keeping for now to
+-  // force non embedded cursor for all capture APIs on Windows.
+-  static BASE_FEATURE(kAllowWinCursorEmbedded, "AllowWinCursorEmbedded",
+-                      base::FEATURE_ENABLED_BY_DEFAULT);
+-  if (base::FeatureList::IsEnabled(kAllowWinCursorEmbedded)) {
+-    options.set_prefer_cursor_embedded(true);
+-  }
+   if (base::FeatureList::IsEnabled(features::kWebRtcAllowWgcScreenCapturer)) {
+     options.set_allow_wgc_screen_capturer(true);
+ 
+@@ -832,8 +817,7 @@ std::unique_ptr<media::VideoCaptureDevice> DesktopCaptureDevice::Create(
+       }
+ #endif
+       if (screen_capturer && screen_capturer->SelectSource(source.id)) {
+-        capturer = std::make_unique<webrtc::DesktopAndCursorComposer>(
+-            std::move(screen_capturer), options);
++        capturer = std::move(screen_capturer);
+         IncrementDesktopCaptureCounter(SCREEN_CAPTURER_CREATED);
+         IncrementDesktopCaptureCounter(
+             source.audio_share ? SCREEN_CAPTURER_CREATED_WITH_AUDIO
+@@ -858,8 +842,7 @@ std::unique_ptr<media::VideoCaptureDevice> DesktopCaptureDevice::Create(
+       }
+ #endif
+       if (window_capturer && window_capturer->SelectSource(source.id)) {
+-        capturer = std::make_unique<webrtc::DesktopAndCursorComposer>(
+-            std::move(window_capturer), options);
++        capturer = std::move(window_capturer);
+         IncrementDesktopCaptureCounter(WINDOW_CAPTURER_CREATED);
+       }
+       break;
