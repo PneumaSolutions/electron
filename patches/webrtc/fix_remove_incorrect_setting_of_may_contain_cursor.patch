@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Campbell <mattcampbell@pobox.com>
+Date: Fri, 16 Aug 2024 12:54:13 -0500
+Subject: fix: Remove incorrect setting of may_contain_cursor
+
+The flag should only ever be set by the underlying DXGI duplicator.
+
+diff --git a/modules/desktop_capture/win/screen_capturer_win_directx.cc b/modules/desktop_capture/win/screen_capturer_win_directx.cc
+index 0ed2e12423fcc7a8ba2ee4cfe8fc1feeaae7daa0..4119ca138b4b27d8f72f8bd21a1f6c6b84dd7f5c 100644
+--- a/modules/desktop_capture/win/screen_capturer_win_directx.cc
++++ b/modules/desktop_capture/win/screen_capturer_win_directx.cc
+@@ -197,12 +197,6 @@ void ScreenCapturerWinDirectx::CaptureFrame() {
+           capture_time_ms);
+       frame->set_capture_time_ms(capture_time_ms);
+       frame->set_capturer_id(DesktopCapturerId::kScreenCapturerWinDirectx);
+-      // The DXGI Output Duplicator supports embedding the cursor but it is
+-      // only supported on very few display adapters. This switch allows us
+-      // to exclude an integrated cursor for all captured frames.
+-      if (!options_.prefer_cursor_embedded()) {
+-        frame->set_may_contain_cursor(false);
+-      }
+ 
+       // TODO(julien.isorce): http://crbug.com/945468. Set the icc profile on
+       // the frame, see WindowCapturerMac::CaptureFrame.
