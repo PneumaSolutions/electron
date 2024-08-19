@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Campbell <mattcampbell@pobox.com>
+Date: Mon, 19 Aug 2024 09:52:11 -0500
+Subject: fix: More accurate tracking of whether a DXGI frame contains the
+ cursor
+
+Required by RIM.
+
+diff --git a/modules/desktop_capture/win/dxgi_output_duplicator.cc b/modules/desktop_capture/win/dxgi_output_duplicator.cc
+index ac028ce38b881ee1ccc875089fadb18247b576c8..33698c62df85ffb855b307d977594e1718495070 100644
+--- a/modules/desktop_capture/win/dxgi_output_duplicator.cc
++++ b/modules/desktop_capture/win/dxgi_output_duplicator.cc
+@@ -157,12 +157,7 @@ bool DxgiOutputDuplicator::ContainsMouseCursor(
+   // mouse position is only valid if the LastMouseUpdateTime member is a non-
+   // zero value.
+   if (frame_info.LastMouseUpdateTime.QuadPart == 0)
+-    return false;
+-
+-  // Ignore cases when the mouse shape has changed and not the position.
+-  const bool new_pointer_shape = (frame_info.PointerShapeBufferSize != 0);
+-  if (new_pointer_shape)
+-    return false;
++    return contained_mouse_cursor_;
+ 
+   // The mouse cursor has moved and we can now query if the mouse pointer is
+   // drawn onto the desktop image or not to decide if we must draw the mouse
+@@ -174,6 +169,7 @@ bool DxgiOutputDuplicator::ContainsMouseCursor(
+   // AcquireNextFrame indicates that a separate pointer isn’t visible, hence
+   // `frame_info.PointerPosition.Visible` is false.
+   const bool cursor_embedded_in_frame = !frame_info.PointerPosition.Visible;
++  contained_mouse_cursor_ = cursor_embedded_in_frame;
+   RTC_HISTOGRAM_BOOLEAN("WebRTC.DesktopCapture.Win.DirectXCursorEmbedded",
+                         cursor_embedded_in_frame);
+   return cursor_embedded_in_frame;
+diff --git a/modules/desktop_capture/win/dxgi_output_duplicator.h b/modules/desktop_capture/win/dxgi_output_duplicator.h
+index a4ce035d8b85374c7195141352ee5b7b90357f11..c84e6f6b7afefddf81418582b42edbb89382d191 100644
+--- a/modules/desktop_capture/win/dxgi_output_duplicator.h
++++ b/modules/desktop_capture/win/dxgi_output_duplicator.h
+@@ -147,6 +147,7 @@ class DxgiOutputDuplicator {
+   DesktopVector last_frame_offset_;
+ 
+   int64_t num_frames_captured_ = 0;
++  bool contained_mouse_cursor_ = true;
+ };
+ 
+ }  // namespace webrtc
