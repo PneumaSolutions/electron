@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Matt Campbell <mattcampbell@pobox.com>
+Date: Mon, 19 Aug 2024 09:48:41 -0500
+Subject: fix: DESKTOP_FRAME_MAY_CONTAIN_CURSOR env var hack
+
+Required by RIM.
+
+diff --git a/content/browser/media/capture/desktop_capture_device.cc b/content/browser/media/capture/desktop_capture_device.cc
+index e62d58cf80df295e9be9f99903adb1d739821860..bfde387823cbe103447cfb8999c5a769b3644c5a 100644
+--- a/content/browser/media/capture/desktop_capture_device.cc
++++ b/content/browser/media/capture/desktop_capture_device.cc
+@@ -502,6 +502,10 @@ void DesktopCaptureDevice::Core::OnCaptureResult(
+   }
+   DCHECK(frame);
+ 
++#if BUILDFLAG(IS_WIN)
++  SetEnvironmentVariableW(L"DESKTOP_FRAME_MAY_CONTAIN_CURSOR", frame->may_contain_cursor() ? L"1" : L"0");
++#endif
++
+   // Continue capturing frames when there are no changes in updated regions
+   // since the last captured frame but don't send the same frame again to the
+   // client. Checking `first_ref_time_` ensures that at least one frame has been
